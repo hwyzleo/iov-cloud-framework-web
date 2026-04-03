@@ -1,1 +1,1 @@
-net.hwyz.iov.cloud.framework.exception.autoconfigure.ExceptionAutoConfiguration
+net.hwyz.iov.cloud.framework.web.autoconfigure.WebAutoConfiguration
