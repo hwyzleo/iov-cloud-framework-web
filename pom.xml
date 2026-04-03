@@ -35,10 +35,18 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- 框架: 通用 -->
         <dependency>
             <groupId>net.hwyz.iov.cloud.framework</groupId>
             <artifactId>framework-common-starter</artifactId>
             <version>${framework-common.version}</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 
