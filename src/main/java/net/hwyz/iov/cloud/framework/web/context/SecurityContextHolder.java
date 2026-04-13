@@ -1,9 +1,9 @@
 package net.hwyz.iov.cloud.framework.web.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
+import net.hwyz.iov.cloud.framework.common.constant.MptSecurityConstants;
 import net.hwyz.iov.cloud.framework.common.util.Convert;
 import net.hwyz.iov.cloud.framework.common.util.StrUtil;
-import net.hwyz.iov.cloud.framework.web.constant.MptSecurityConstants;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

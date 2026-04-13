@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.framework.web.page;
 
 import net.hwyz.iov.cloud.framework.common.util.Convert;
-import net.hwyz.iov.cloud.framework.web.util.ServletUtil;
+import net.hwyz.iov.cloud.framework.common.util.ServletUtil;
 
 /**
  * 表格数据处理

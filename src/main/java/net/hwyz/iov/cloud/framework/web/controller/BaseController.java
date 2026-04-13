@@ -2,9 +2,9 @@ package net.hwyz.iov.cloud.framework.web.controller;
 
 import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
+import net.hwyz.iov.cloud.framework.common.bean.AjaxResult;
+import net.hwyz.iov.cloud.framework.common.constant.HttpStatus;
 import net.hwyz.iov.cloud.framework.common.util.DateUtil;
-import net.hwyz.iov.cloud.framework.web.constant.HttpStatus;
-import net.hwyz.iov.cloud.framework.web.domain.AjaxResult;
 import net.hwyz.iov.cloud.framework.web.domain.BaseRequest;
 import net.hwyz.iov.cloud.framework.web.page.TableDataInfo;
 import net.hwyz.iov.cloud.framework.web.util.PageUtil;
