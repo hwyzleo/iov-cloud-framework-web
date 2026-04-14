@@ -1,1 +1,2 @@
 net.hwyz.iov.cloud.framework.web.autoconfigure.WebAutoConfiguration
+net.hwyz.iov.cloud.framework.web.util.SpringUtil
