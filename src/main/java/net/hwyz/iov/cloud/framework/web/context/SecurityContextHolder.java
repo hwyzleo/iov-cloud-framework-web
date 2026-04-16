@@ -1,7 +1,7 @@
 package net.hwyz.iov.cloud.framework.web.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import net.hwyz.iov.cloud.framework.common.constant.MptSecurityConstants;
+import net.hwyz.iov.cloud.framework.common.constant.SecurityConstants;
 import net.hwyz.iov.cloud.framework.common.util.Convert;
 import net.hwyz.iov.cloud.framework.common.util.StrUtil;
 
@@ -45,36 +45,36 @@ public class SecurityContextHolder {
         THREAD_LOCAL.set(threadLocalMap);
     }
 
-    public static Long getUserId() {
-        return Convert.toLong(get(MptSecurityConstants.DETAILS_USER_ID), 0L);
+    public static String getUserId() {
+        return get(SecurityConstants.USER_ID);
     }
 
     public static void setUserId(String account) {
-        set(MptSecurityConstants.DETAILS_USER_ID, account);
+        set(SecurityConstants.USER_ID, account);
     }
 
     public static String getUserName() {
-        return get(MptSecurityConstants.DETAILS_USERNAME);
+        return get(SecurityConstants.USERNAME);
     }
 
     public static void setUserName(String username) {
-        set(MptSecurityConstants.DETAILS_USERNAME, username);
+        set(SecurityConstants.USERNAME, username);
     }
 
     public static String getUserKey() {
-        return get(MptSecurityConstants.USER_KEY);
+        return get(SecurityConstants.USER_KEY);
     }
 
     public static void setUserKey(String userKey) {
-        set(MptSecurityConstants.USER_KEY, userKey);
+        set(SecurityConstants.USER_KEY, userKey);
     }
 
     public static String getPermission() {
-        return get(MptSecurityConstants.ROLE_PERMISSION);
+        return get(SecurityConstants.ROLE_PERMISSION);
     }
 
     public static void setPermission(String permissions) {
-        set(MptSecurityConstants.ROLE_PERMISSION, permissions);
+        set(SecurityConstants.ROLE_PERMISSION, permissions);
     }
 
     public static void remove() {
