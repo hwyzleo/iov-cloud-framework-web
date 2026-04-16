@@ -1,5 +1,7 @@
 package net.hwyz.iov.cloud.framework.web.autoconfigure;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import net.hwyz.iov.cloud.framework.web.filter.IdempotencyFilter;
 import net.hwyz.iov.cloud.framework.web.filter.RateLimitFilter;
 import net.hwyz.iov.cloud.framework.web.filter.TraceIdFilter;
@@ -14,6 +16,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -25,6 +28,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableConfigurationProperties(WebFrameworkProperties.class)
 public class WebAutoConfiguration implements WebMvcConfigurer {
+
+    @Bean
+    @Primary
+    @ConditionalOnMissingBean(ObjectMapper.class)
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
+    }
 
     @Bean
     @ConditionalOnMissingBean
