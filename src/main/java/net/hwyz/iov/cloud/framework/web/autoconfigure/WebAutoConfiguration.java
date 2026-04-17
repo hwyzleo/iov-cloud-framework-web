@@ -24,6 +24,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 
 /**
@@ -45,6 +46,12 @@ public class WebAutoConfiguration implements WebMvcConfigurer {
                 @Override
                 public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
                     gen.writeNumber(value.toInstant().toEpochMilli());
+                }
+            });
+            module.addSerializer(Instant.class, new JsonSerializer<Instant>() {
+                @Override
+                public void serialize(Instant value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                    gen.writeNumber(value.toEpochMilli());
                 }
             });
             builder.modules(module);
