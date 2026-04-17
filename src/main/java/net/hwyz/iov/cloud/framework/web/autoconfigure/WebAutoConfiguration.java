@@ -1,6 +1,8 @@
 package net.hwyz.iov.cloud.framework.web.autoconfigure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import net.hwyz.iov.cloud.framework.web.filter.IdempotencyFilter;
 import net.hwyz.iov.cloud.framework.web.filter.RateLimitFilter;
@@ -12,6 +14,7 @@ import net.hwyz.iov.cloud.framework.web.interceptor.RequestLogInterceptor;
 import net.hwyz.iov.cloud.framework.web.properties.WebFrameworkProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +22,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.io.IOException;
+import java.time.OffsetDateTime;
 
 /**
  * 自动配置类
@@ -31,11 +37,18 @@ public class WebAutoConfiguration implements WebMvcConfigurer {
 
     @Bean
     @Primary
-    @ConditionalOnMissingBean(ObjectMapper.class)
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        return mapper;
+    @ConditionalOnMissingBean(Jackson2ObjectMapperBuilderCustomizer.class)
+    public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
+        return builder -> {
+            JavaTimeModule module = new JavaTimeModule();
+            module.addSerializer(OffsetDateTime.class, new JsonSerializer<OffsetDateTime>() {
+                @Override
+                public void serialize(OffsetDateTime value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                    gen.writeNumber(value.toInstant().toEpochMilli());
+                }
+            });
+            builder.modules(module);
+        };
     }
 
     @Bean

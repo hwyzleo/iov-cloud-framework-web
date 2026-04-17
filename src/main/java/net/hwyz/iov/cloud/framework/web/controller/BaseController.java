@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.framework.common.bean.AjaxResult;
 import net.hwyz.iov.cloud.framework.common.bean.BaseRequest;
 import net.hwyz.iov.cloud.framework.common.constant.HttpStatus;
-import net.hwyz.iov.cloud.framework.common.util.DateUtil;
+import net.hwyz.iov.cloud.framework.common.util.DateTimeUtil;
 import net.hwyz.iov.cloud.framework.web.page.TableDataInfo;
 import net.hwyz.iov.cloud.framework.web.util.PageUtil;
 import org.springframework.web.bind.WebDataBinder;
@@ -32,7 +32,7 @@ public class BaseController {
         binder.registerCustomEditor(Date.class, new PropertyEditorSupport() {
             @Override
             public void setAsText(String text) {
-                setValue(DateUtil.parseDate(text));
+                setValue(DateTimeUtil.parseDate(text));
             }
         });
     }
@@ -48,7 +48,7 @@ public class BaseController {
             return null;
         }
         try {
-            return DateUtil.parseDate(request.getParams().get("beginTime").toString());
+            return DateTimeUtil.parseDate(request.getParams().get("beginTime").toString());
         } catch (Exception e) {
             log.warn("日期转换异常:{}", e.getMessage(), e);
             return null;
@@ -66,7 +66,7 @@ public class BaseController {
             return null;
         }
         try {
-            return DateUtil.parseDate(request.getParams().get("endTime").toString());
+            return DateTimeUtil.parseDate(request.getParams().get("endTime").toString());
         } catch (Exception e) {
             log.warn("日期转换异常:{}", e.getMessage(), e);
             return null;
