@@ -1,12 +1,10 @@
 package net.hwyz.iov.cloud.framework.web.controller;
 
-import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import net.hwyz.iov.cloud.framework.common.bean.AjaxResult;
 import net.hwyz.iov.cloud.framework.common.bean.BaseRequest;
-import net.hwyz.iov.cloud.framework.common.constant.HttpStatus;
+import net.hwyz.iov.cloud.framework.common.bean.PageResult;
 import net.hwyz.iov.cloud.framework.common.util.DateTimeUtil;
-import net.hwyz.iov.cloud.framework.web.page.TableDataInfo;
 import net.hwyz.iov.cloud.framework.web.util.PageUtil;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -90,40 +88,31 @@ public class BaseController {
     /**
      * 响应请求分页数据
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected TableDataInfo getDataTable(List<?> list) {
-        TableDataInfo rspData = new TableDataInfo();
-        rspData.setCode(HttpStatus.SUCCESS);
-        rspData.setRows(list);
-        rspData.setMsg("查询成功");
-        rspData.setTotal(new PageInfo(list).getTotal());
-        return rspData;
+    protected <T> PageResult<T> getPageResult(List<T> list) {
+        PageResult<T> result = new PageResult<>();
+        result.setItems(list);
+        result.setTotal(list.size());
+        return result;
     }
 
     /**
      * 响应请求分页数据
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected TableDataInfo getDataTable(List<?> rawlist, List<?> list) {
-        TableDataInfo rspData = new TableDataInfo();
-        rspData.setCode(HttpStatus.SUCCESS);
-        rspData.setRows(list);
-        rspData.setMsg("查询成功");
-        rspData.setTotal(new PageInfo(rawlist).getTotal());
-        return rspData;
+    protected <T1, T2> PageResult<T1> getPageResult(List<T1> list, List<T2> rawList) {
+        PageResult<T1> result = new PageResult<>();
+        result.setItems(list);
+        result.setTotal(rawList.size());
+        return result;
     }
 
     /**
      * 响应请求分页数据
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected TableDataInfo getDataTable(List<?> list, long total) {
-        TableDataInfo rspData = new TableDataInfo();
-        rspData.setCode(HttpStatus.SUCCESS);
-        rspData.setRows(list);
-        rspData.setMsg("查询成功");
-        rspData.setTotal(total);
-        return rspData;
+    protected <T> PageResult<T> getPageResult(List<T> list, long total) {
+        PageResult<T> result = new PageResult<>();
+        result.setItems(list);
+        result.setTotal(total);
+        return result;
     }
 
     /**
