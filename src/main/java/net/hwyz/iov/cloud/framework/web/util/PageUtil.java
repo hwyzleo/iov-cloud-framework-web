@@ -2,6 +2,7 @@ package net.hwyz.iov.cloud.framework.web.util;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import net.hwyz.iov.cloud.framework.common.bean.PageResult;
 import net.hwyz.iov.cloud.framework.common.util.SqlUtil;
 import net.hwyz.iov.cloud.framework.web.page.PageDomain;
 import net.hwyz.iov.cloud.framework.web.page.TableSupport;
@@ -33,6 +34,20 @@ public class PageUtil extends PageHelper {
      */
     public static void clearPage() {
         PageHelper.clearPage();
+    }
+
+    /**
+     * 响应请求分页数据
+     */
+    public static <T> PageResult<T> getPageResult(List<T> list) {
+        PageResult<T> result = new PageResult<>();
+        result.setItems(list);
+        if (list instanceof com.github.pagehelper.Page) {
+            result.setTotal(((com.github.pagehelper.Page) list).getTotal());
+        } else {
+            result.setTotal(list.size());
+        }
+        return result;
     }
 
     /**

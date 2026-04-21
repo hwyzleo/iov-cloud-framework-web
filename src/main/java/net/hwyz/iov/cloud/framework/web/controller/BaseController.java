@@ -89,30 +89,7 @@ public class BaseController {
      * 响应请求分页数据
      */
     protected <T> PageResult<T> getPageResult(List<T> list) {
-        PageResult<T> result = new PageResult<>();
-        result.setItems(list);
-        result.setTotal(list.size());
-        return result;
-    }
-
-    /**
-     * 响应请求分页数据
-     */
-    protected <T1, T2> PageResult<T1> getPageResult(List<T1> list, List<T2> rawList) {
-        PageResult<T1> result = new PageResult<>();
-        result.setItems(list);
-        result.setTotal(rawList.size());
-        return result;
-    }
-
-    /**
-     * 响应请求分页数据
-     */
-    protected <T> PageResult<T> getPageResult(List<T> list, long total) {
-        PageResult<T> result = new PageResult<>();
-        result.setItems(list);
-        result.setTotal(total);
-        return result;
+        return PageUtil.getPageResult(list);
     }
 
     /**
