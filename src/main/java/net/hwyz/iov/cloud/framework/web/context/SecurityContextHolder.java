@@ -1,8 +1,11 @@
 package net.hwyz.iov.cloud.framework.web.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
+import jakarta.servlet.http.HttpServletRequest;
 import net.hwyz.iov.cloud.framework.common.constant.SecurityConstants;
+import net.hwyz.iov.cloud.framework.common.constant.TokenConstants;
 import net.hwyz.iov.cloud.framework.common.util.Convert;
+import net.hwyz.iov.cloud.framework.common.util.ServletUtil;
 import net.hwyz.iov.cloud.framework.common.util.StrUtil;
 
 import java.util.Map;
@@ -49,6 +52,14 @@ public class SecurityContextHolder {
         return get(SecurityConstants.USER_ID);
     }
 
+    /**
+     * 获取用户ID（Long类型）
+     */
+    public static Long getUserIdAsLong() {
+        String userId = getUserId();
+        return StrUtil.isNotEmpty(userId) ? Long.valueOf(userId) : null;
+    }
+
     public static void setUserId(String account) {
         set(SecurityConstants.USER_ID, account);
     }
@@ -75,6 +86,33 @@ public class SecurityContextHolder {
 
     public static void setPermission(String permissions) {
         set(SecurityConstants.ROLE_PERMISSION, permissions);
+    }
+
+    /**
+     * 获取请求token
+     */
+    public static String getToken() {
+        return getToken(ServletUtil.getRequest());
+    }
+
+    /**
+     * 根据request获取请求token
+     */
+    public static String getToken(HttpServletRequest request) {
+        // 从header获取token标识
+        String token = request.getHeader(SecurityConstants.AUTHORIZATION_HEADER);
+        return replaceTokenPrefix(token);
+    }
+
+    /**
+     * 裁剪token前缀
+     */
+    public static String replaceTokenPrefix(String token) {
+        // 如果前端设置了令牌前缀，则裁剪掉前缀
+        if (StrUtil.isNotEmpty(token) && token.startsWith(TokenConstants.PREFIX)) {
+            token = token.replaceFirst(TokenConstants.PREFIX, "");
+        }
+        return token;
     }
 
     public static void remove() {
