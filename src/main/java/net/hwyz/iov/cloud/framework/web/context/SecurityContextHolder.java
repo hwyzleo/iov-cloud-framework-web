@@ -2,6 +2,7 @@ package net.hwyz.iov.cloud.framework.web.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import jakarta.servlet.http.HttpServletRequest;
+import net.hwyz.iov.cloud.framework.common.constant.CustomHeaders;
 import net.hwyz.iov.cloud.framework.common.constant.SecurityConstants;
 import net.hwyz.iov.cloud.framework.common.constant.TokenConstants;
 import net.hwyz.iov.cloud.framework.common.util.Convert;
@@ -80,6 +81,70 @@ public class SecurityContextHolder {
         set(SecurityConstants.USER_KEY, userKey);
     }
 
+    public static String getClientId() {
+        return get(SecurityConstants.CLIENT_ID);
+    }
+
+    public static void setClientId(String clientId) {
+        set(SecurityConstants.CLIENT_ID, clientId);
+    }
+
+    public static String getClientType() {
+        return get(SecurityConstants.CLIENT_TYPE);
+    }
+
+    public static void setClientType(String clientType) {
+        set(SecurityConstants.CLIENT_TYPE, clientType);
+    }
+
+    public static String getDeviceId() {
+        return get(SecurityConstants.DEVICE_ID);
+    }
+
+    public static void setDeviceId(String deviceId) {
+        set(SecurityConstants.DEVICE_ID, deviceId);
+    }
+
+    public static String getPlatform() {
+        return get(SecurityConstants.PLATFORM);
+    }
+
+    public static void setPlatform(String platform) {
+        set(SecurityConstants.PLATFORM, platform);
+    }
+
+    public static String getOsVersion() {
+        return get(SecurityConstants.OS_VERSION);
+    }
+
+    public static void setOsVersion(String osVersion) {
+        set(SecurityConstants.OS_VERSION, osVersion);
+    }
+
+    public static String getAppVersion() {
+        return get(SecurityConstants.APP_VERSION);
+    }
+
+    public static void setAppVersion(String appVersion) {
+        set(SecurityConstants.APP_VERSION, appVersion);
+    }
+
+    public static String getSessionId() {
+        return get(SecurityConstants.SESSION_ID);
+    }
+
+    public static void setSessionId(String sessionId) {
+        set(SecurityConstants.SESSION_ID, sessionId);
+    }
+
+    public static String getScope() {
+        return get(SecurityConstants.SCOPE);
+    }
+
+    public static void setScope(String scope) {
+        set(SecurityConstants.SCOPE, scope);
+    }
+
     public static String getPermission() {
         return get(SecurityConstants.ROLE_PERMISSION);
     }
@@ -100,7 +165,7 @@ public class SecurityContextHolder {
      */
     public static String getToken(HttpServletRequest request) {
         // 从header获取token标识
-        String token = request.getHeader(SecurityConstants.AUTHORIZATION_HEADER);
+        String token = request.getHeader(CustomHeaders.AUTHORIZATION_HEADER);
         return replaceTokenPrefix(token);
     }
 
