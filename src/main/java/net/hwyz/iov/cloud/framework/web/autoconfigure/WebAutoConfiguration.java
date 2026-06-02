@@ -5,7 +5,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.cfg.CoercionAction;
+import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
+import com.fasterxml.jackson.databind.type.LogicalType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import net.hwyz.iov.cloud.framework.web.filter.IdempotencyFilter;
 import net.hwyz.iov.cloud.framework.web.filter.RateLimitFilter;
@@ -77,6 +81,10 @@ public class WebAutoConfiguration implements WebMvcConfigurer {
                 }
             });
             builder.modules(module);
+            // 允许空字符串反序列化为空集合
+            builder.postConfigurer(objectMapper -> objectMapper
+                .coercionConfigFor(LogicalType.Collection)
+                .setCoercion(CoercionInputShape.EmptyString, CoercionAction.AsEmpty));
         };
     }
 
