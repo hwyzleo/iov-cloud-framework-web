@@ -1,6 +1,9 @@
 package net.hwyz.iov.cloud.framework.web.autoconfigure;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -25,7 +28,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 /**
  * 自动配置类
@@ -52,6 +57,23 @@ public class WebAutoConfiguration implements WebMvcConfigurer {
                 @Override
                 public void serialize(Instant value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
                     gen.writeNumber(value.toEpochMilli());
+                }
+            });
+            module.addSerializer(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+                @Override
+                public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                    gen.writeNumber(value.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                }
+            });
+            module.addDeserializer(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
+                @Override
+                public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                    long timestamp = p.getLongValue();
+                    // 10位为秒级时间戳，13位为毫秒级时间戳
+                    Instant instant = timestamp > 9999999999L
+                        ? Instant.ofEpochMilli(timestamp)
+                        : Instant.ofEpochSecond(timestamp);
+                    return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
                 }
             });
             builder.modules(module);
