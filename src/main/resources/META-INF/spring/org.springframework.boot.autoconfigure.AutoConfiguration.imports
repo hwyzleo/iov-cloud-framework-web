@@ -1,3 +1,4 @@
 net.hwyz.iov.cloud.framework.web.autoconfigure.IovJacksonAutoConfiguration
 net.hwyz.iov.cloud.framework.web.autoconfigure.WebAutoConfiguration
 net.hwyz.iov.cloud.framework.web.util.SpringUtil
+net.hwyz.iov.cloud.framework.web.autoconfigure.IovRequestTimeZoneAutoConfiguration
