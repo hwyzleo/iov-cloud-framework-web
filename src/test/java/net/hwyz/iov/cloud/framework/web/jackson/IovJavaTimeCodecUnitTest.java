@@ -47,6 +47,7 @@ class IovJavaTimeCodecUnitTest {
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mapper.registerModule(new JavaTimeModule());
         mapper.registerModule(new IovJavaTimeReadModule(zone));
+        mapper.registerModule(new IovIsoWriteModule(zone));
         return mapper;
     }
 
@@ -59,21 +60,42 @@ class IovJavaTimeCodecUnitTest {
         assertThat(json).contains("\"instant\":" + SAMPLE_INSTANT.toEpochMilli());
         assertThat(json).contains("\"offset\":" + SAMPLE_OFFSET.toInstant().toEpochMilli());
         assertThat(json).contains("\"local\":" + SAMPLE_LOCAL.atZone(SHANGHAI).toInstant().toEpochMilli());
+        // FW-WEB-DSN-CR-003：java.util.Date 也输出毫秒
+        assertThat(json).contains("\"date\":" + SAMPLE_INSTANT.toEpochMilli());
     }
 
     @Test
-    void iso模式三类型输出ISO8601字符串() throws Exception {
+    void iso模式四类型输出毫秒精度ISO8601() throws Exception {
         ObjectMapper mapper = isoMapper(SHANGHAI);
         String json = mapper.writeValueAsString(new Sample(SAMPLE_INSTANT, SAMPLE_OFFSET, SAMPLE_LOCAL));
-        assertThat(json).contains("\"instant\":\"2026-10-28T12:43:32Z\"");
-        assertThat(json).contains("\"offset\":\"2026-10-28T20:43:32+08:00\"");
-        assertThat(json).contains("\"local\":\"2026-10-14T14:26:13\"");
+        assertThat(json).contains("\"instant\":\"2026-10-28T12:43:32.000Z\"");
+        // OffsetDateTime 归一为瞬时，统一 Z
+        assertThat(json).contains("\"offset\":\"2026-10-28T12:43:32.000Z\"");
+        // LocalDateTime 按显式 zone 转瞬时
+        assertThat(json).contains("\"local\":\"2026-10-14T06:26:13.000Z\"");
+        // java.util.Date 由框架拥有（不再走 Boot StdDateFormat）
+        assertThat(json).contains("\"date\":\"2026-10-28T12:43:32.000Z\"");
     }
 
     @Test
     void iso模式无数组输出且无秒小数() throws Exception {
         String json = isoMapper(SHANGHAI).writeValueAsString(SAMPLE_LOCAL);
-        assertThat(json).isEqualTo("\"2026-10-14T14:26:13\"");
+        assertThat(json).isEqualTo("\"2026-10-14T06:26:13.000Z\"");
+    }
+
+    @Test
+    void iso模式精度固定为毫秒_纳秒截断不四舍五入() throws Exception {
+        Instant nano = Instant.parse("2026-10-28T12:43:32.123456789Z");
+        ObjectMapper mapper = isoMapper(SHANGHAI);
+        assertThat(mapper.writeValueAsString(nano)).isEqualTo("\"2026-10-28T12:43:32.123Z\"");
+        assertThat(mapper.writeValueAsString(Instant.parse("2026-10-28T12:43:32.999999999Z")))
+                .isEqualTo("\"2026-10-28T12:43:32.999Z\"");
+    }
+
+    @Test
+    void iso模式未配置zone_LocalDateTime写出failClosed() {
+        ObjectMapper mapper = isoMapper(null);
+        assertThatThrownBy(() -> mapper.writeValueAsString(SAMPLE_LOCAL)).hasMessageContaining("zone-id");
     }
 
     // ---------- 双读 ----------
@@ -126,6 +148,16 @@ class IovJavaTimeCodecUnitTest {
     void OffsetDateTimeISO带offset读取() throws Exception {
         ObjectMapper mapper = epochMillisMapper(SHANGHAI);
         assertThat(mapper.readValue("\"2026-10-28T20:43:32+08:00\"", OffsetDateTime.class)).isEqualTo(SAMPLE_OFFSET);
+    }
+
+    @Test
+    void LocalDateTimeISO带offset读取_按zone归一() throws Exception {
+        ObjectMapper mapper = epochMillisMapper(SHANGHAI);
+        // FW-WEB-DSN-CR-003 FR-003-6：出站统一带时区后，入站必须对称接受
+        assertThat(mapper.readValue("\"2026-10-28T20:43:32+08:00\"", LocalDateTime.class))
+                .isEqualTo(LocalDateTime.parse("2026-10-28T20:43:32"));
+        assertThat(mapper.readValue("\"2026-10-28T12:43:32Z\"", LocalDateTime.class))
+                .isEqualTo(LocalDateTime.parse("2026-10-28T20:43:32"));
     }
 
     @Test
@@ -187,8 +219,7 @@ class IovJavaTimeCodecUnitTest {
         ObjectMapper mapper = epochMillisMapper(SHANGHAI);
         assertThatThrownBy(() -> mapper.readValue("\"2026-10-28T12:43:32\"", Instant.class)).isInstanceOf(Exception.class); // 无 offset
         assertThatThrownBy(() -> mapper.readValue("\"not-a-date\"", Instant.class)).isInstanceOf(Exception.class);
-        assertThatThrownBy(() -> mapper.readValue("\"2026-10-14T14:26:13+08:00\"", LocalDateTime.class))
-                .isInstanceOf(Exception.class); // LocalDateTime 带 offset 不得静默丢弃
+        assertThatThrownBy(() -> mapper.readValue("\"not-a-date\"", LocalDateTime.class)).isInstanceOf(Exception.class);
         assertThatThrownBy(() -> mapper.readValue("\"2026-10-28T12:43:32\"", OffsetDateTime.class))
                 .isInstanceOf(Exception.class); // OffsetDateTime 无 offset
     }
@@ -262,6 +293,7 @@ class IovJavaTimeCodecUnitTest {
         public Instant instant;
         public OffsetDateTime offset;
         public LocalDateTime local;
+        public java.util.Date date;
 
         Sample() {
         }
@@ -270,6 +302,7 @@ class IovJavaTimeCodecUnitTest {
             this.instant = instant;
             this.offset = offset;
             this.local = local;
+            this.date = new java.util.Date(instant.toEpochMilli());
         }
     }
 }

@@ -51,9 +51,9 @@ class JacksonMvcIntegrationTest {
         mockMvc.perform(get("/time"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(
-                        "{\"instant\":\"2026-10-28T12:43:32Z\","
-                                + "\"offset\":\"2026-10-28T20:43:32+08:00\","
-                                + "\"local\":\"2026-10-14T14:26:13\"}"));
+                        "{\"instant\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"offset\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"local\":\"2026-10-14T06:26:13.000Z\"}"));
     }
 
     @Test
@@ -65,9 +65,24 @@ class JacksonMvcIntegrationTest {
                                 + "\"local\":\"2026-10-14T14:26:13\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(
-                        "{\"instant\":\"2026-10-28T12:43:32Z\","
-                                + "\"offset\":\"2026-10-28T20:43:32+08:00\","
-                                + "\"local\":\"2026-10-14T14:26:13\"}"));
+                        "{\"instant\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"offset\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"local\":\"2026-10-14T06:26:13.000Z\"}"));
+    }
+
+    @Test
+    void POST兼容LocalDateTime带offset输入() throws Exception {
+        // FW-WEB-DSN-CR-003 FR-003-6：出站统一带时区后，入站必须对称接受带 offset 字符串
+        mockMvc.perform(post("/time")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"instant\":\"2026-10-28T12:43:32Z\","
+                                + "\"offset\":\"2026-10-28T12:43:32Z\","
+                                + "\"local\":\"2026-10-14T06:26:13.000Z\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(
+                        "{\"instant\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"offset\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"local\":\"2026-10-14T06:26:13.000Z\"}"));
     }
 
     @Test
@@ -80,9 +95,9 @@ class JacksonMvcIntegrationTest {
                                 + "\"local\":" + instant.toEpochMilli() + "}"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(
-                        "{\"instant\":\"2026-10-28T12:43:32Z\","
-                                + "\"offset\":\"2026-10-28T20:43:32+08:00\","
-                                + "\"local\":\"2026-10-28T20:43:32\"}"));
+                        "{\"instant\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"offset\":\"2026-10-28T12:43:32.000Z\","
+                                + "\"local\":\"2026-10-28T12:43:32.000Z\"}"));
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.fasterxml.jackson.databind.type.LogicalType;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import net.hwyz.iov.cloud.framework.web.jackson.IovEpochMillisWriteModule;
+import net.hwyz.iov.cloud.framework.web.jackson.IovIsoWriteModule;
 import net.hwyz.iov.cloud.framework.web.jackson.IovJavaTimeReadModule;
 import net.hwyz.iov.cloud.framework.web.jackson.JacksonProperties;
 import net.hwyz.iov.cloud.framework.web.jackson.JacksonStartupProbe;
@@ -27,8 +28,9 @@ import org.springframework.core.annotation.Order;
  *       无关 customizer 不再抑制框架策略；</li>
  *   <li>模块经 postConfigurer 在 ObjectMapper 构建后注册，保留 JavaTimeModule 自动发现
  *       与默认能力（不受 modulesToInstall 替换语义影响，后注册覆盖同类型 serializer）；</li>
- *   <li>epoch-millis（默认）：追加 epoch 毫秒写出模块 + 双读模块，复现存量输出；</li>
- *   <li>iso：不注册显式 epoch 序列化器、关闭 WRITE_DATES_AS_TIMESTAMPS，JavaTimeModule 输出 ISO；</li>
+ *   <li>iso（默认）：注册 {@link IovIsoWriteModule}，四类型统一输出 ISO-8601（固定毫秒 + `Z`），
+ *       不依赖 Spring Boot 默认日期序列化；</li>
+ *   <li>epoch-millis（兼容模式）：追加 epoch 毫秒写出模块（含 {@code java.util.Date}）；</li>
  *   <li>保留空字符串反序列化为空集合的既有行为；</li>
  *   <li>启动探针校验最终生效 mapper，失败阻断发布。</li>
  * </ul>
@@ -56,6 +58,10 @@ public class IovJacksonAutoConfiguration {
                 objectMapper.registerModule(new IovJavaTimeReadModule(properties.getZoneId()));
                 if (properties.getDateFormat() == JacksonProperties.DateFormat.EPOCH_MILLIS) {
                     objectMapper.registerModule(new IovEpochMillisWriteModule(properties.getZoneId()));
+                } else {
+                    // FW-WEB-DSN-CR-003：ISO 模式下四类型（含 java.util.Date）统一由框架写出，
+                    // 不再依赖 JavaTimeModule 默认行为与 Spring Boot StdDateFormat。
+                    objectMapper.registerModule(new IovIsoWriteModule(properties.getZoneId()));
                 }
                 // 保留：空字符串反序列化为空集合（既有行为）
                 objectMapper.coercionConfigFor(LogicalType.Collection)

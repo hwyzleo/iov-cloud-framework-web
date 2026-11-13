@@ -43,7 +43,7 @@ class JacksonAutoConfigurationTest {
     @Test
     void epochMillis模式_配置zone_输出13位毫秒数字() {
         runner()
-                .withPropertyValues("iov.web.jackson.zone-id=Asia/Shanghai")
+                .withPropertyValues("iov.web.jackson.date-format=epoch-millis", "iov.web.jackson.zone-id=Asia/Shanghai")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     ObjectMapper mapper = context.getBean(ObjectMapper.class);
@@ -53,6 +53,25 @@ class JacksonAutoConfigurationTest {
                     assertThat(node.get("offset").longValue()).isEqualTo(SAMPLE_OFFSET.toInstant().toEpochMilli());
                     assertThat(node.get("local").longValue())
                             .isEqualTo(SAMPLE_LOCAL.atZone(SHANGHAI).toInstant().toEpochMilli());
+                    // FW-WEB-DSN-CR-003：Date 也纳入 epoch-millis（不再走 Boot StdDateFormat）
+                    assertThat(node.get("date").isIntegralNumber()).isTrue();
+                    assertThat(node.get("date").longValue()).isEqualTo(SAMPLE_INSTANT.toEpochMilli());
+                });
+    }
+
+    @Test
+    void 默认模式即iso_四类型统一输出毫秒Z() {
+        // 不配置 date-format（默认 ISO）
+        runner()
+                .withPropertyValues("iov.web.jackson.zone-id=Asia/Shanghai")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    ObjectMapper mapper = context.getBean(ObjectMapper.class);
+                    JsonNode node = mapper.valueToTree(new Sample(SAMPLE_INSTANT, SAMPLE_OFFSET, SAMPLE_LOCAL));
+                    assertThat(node.get("instant").asText()).isEqualTo("2026-10-28T12:43:32.000Z");
+                    assertThat(node.get("offset").asText()).isEqualTo("2026-10-28T12:43:32.000Z");
+                    assertThat(node.get("local").asText()).isEqualTo("2026-10-14T06:26:13.000Z");
+                    assertThat(node.get("date").asText()).isEqualTo("2026-10-28T12:43:32.000Z");
                 });
     }
 
@@ -64,20 +83,38 @@ class JacksonAutoConfigurationTest {
                     assertThat(context).hasNotFailed();
                     ObjectMapper mapper = context.getBean(ObjectMapper.class);
                     JsonNode node = mapper.valueToTree(new Sample(SAMPLE_INSTANT, SAMPLE_OFFSET, SAMPLE_LOCAL));
-                    assertThat(node.get("instant").asText()).isEqualTo("2026-10-28T12:43:32Z");
-                    assertThat(node.get("offset").asText()).isEqualTo("2026-10-28T20:43:32+08:00");
-                    assertThat(node.get("local").asText()).isEqualTo("2026-10-14T14:26:13");
+                    // FW-WEB-DSN-CR-003：统一 UTC（Z）+ 固定 3 位毫秒，OffsetDateTime 归一为瞬时
+                    assertThat(node.get("instant").asText()).isEqualTo("2026-10-28T12:43:32.000Z");
+                    assertThat(node.get("offset").asText()).isEqualTo("2026-10-28T12:43:32.000Z");
+                    assertThat(node.get("local").asText()).isEqualTo("2026-10-14T06:26:13.000Z");
+                    assertThat(node.get("date").asText()).isEqualTo("2026-10-28T12:43:32.000Z");
                 });
     }
 
     @Test
-    void iso模式_未配置zone_可启动_LocalDateTimeISO写出无需zone() {
+    void iso模式_未配置zone_探针阻断启动() {
         runner()
                 .withPropertyValues("iov.web.jackson.date-format=iso")
                 .run(context -> {
-                    assertThat(context).hasNotFailed();
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasMessageContaining("zone-id");
+                });
+    }
+
+    @Test
+    void iso模式_入站LocalDateTime带offset按zone归一() {
+        runner()
+                .withPropertyValues("iov.web.jackson.zone-id=Asia/Shanghai")
+                .run(context -> {
                     ObjectMapper mapper = context.getBean(ObjectMapper.class);
-                    assertThat(mapper.writeValueAsString(SAMPLE_LOCAL)).isEqualTo("\"2026-10-14T14:26:13\"");
+                    // 带 offset 的入站字符串按 zone-id 归一为墙上时间（出站/入站对称）
+                    assertThat(mapper.readValue("\"2026-10-28T12:43:32Z\"", LocalDateTime.class))
+                            .isEqualTo(LocalDateTime.parse("2026-10-28T20:43:32"));
+                    assertThat(mapper.readValue("\"2026-10-28T20:43:32+08:00\"", LocalDateTime.class))
+                            .isEqualTo(LocalDateTime.parse("2026-10-28T20:43:32"));
+                    // 无 offset 的墙上时间保持原语义
+                    assertThat(mapper.readValue("\"2026-10-14T14:26:13\"", LocalDateTime.class))
+                            .isEqualTo(SAMPLE_LOCAL);
                 });
     }
 
@@ -101,11 +138,13 @@ class JacksonAutoConfigurationTest {
 
     @Test
     void epochMillis模式_未配置zone_探针阻断启动() {
-        runner().run(context -> {
-            assertThat(context).hasFailed();
-            assertThat(context.getStartupFailure()).hasMessageContaining("启动探针失败");
-            assertThat(context.getStartupFailure()).hasMessageContaining("zone-id");
-        });
+        runner()
+                .withPropertyValues("iov.web.jackson.date-format=epoch-millis")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure()).hasMessageContaining("启动探针失败");
+                    assertThat(context.getStartupFailure()).hasMessageContaining("zone-id");
+                });
     }
 
     // ---------- 无关 customizer 共存（不抑制框架策略，服务定制保留） ----------
@@ -118,9 +157,9 @@ class JacksonAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     ObjectMapper mapper = context.getBean(ObjectMapper.class);
-                    // 框架策略仍生效：Instant 输出 ISO
+                    // 框架策略仍生效：Instant 输出 ISO（3 位毫秒）
                     JsonNode node = mapper.valueToTree(new Sample(SAMPLE_INSTANT, SAMPLE_OFFSET, SAMPLE_LOCAL));
-                    assertThat(node.get("instant").asText()).isEqualTo("2026-10-28T12:43:32Z");
+                    assertThat(node.get("instant").asText()).isEqualTo("2026-10-28T12:43:32.000Z");
                     // 服务定制保留：自定义 String 序列化器（后注册覆盖）
                     assertThat(mapper.writeValueAsString("hello")).isEqualTo("\"SVC:hello\"");
                 });
@@ -227,6 +266,7 @@ class JacksonAutoConfigurationTest {
         public Instant instant;
         public OffsetDateTime offset;
         public LocalDateTime local;
+        public java.util.Date date;
 
         Sample() {
         }
@@ -235,6 +275,7 @@ class JacksonAutoConfigurationTest {
             this.instant = instant;
             this.offset = offset;
             this.local = local;
+            this.date = new java.util.Date(instant.toEpochMilli());
         }
     }
 }
