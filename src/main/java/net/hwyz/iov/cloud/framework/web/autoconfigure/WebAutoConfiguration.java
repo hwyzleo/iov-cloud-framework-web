@@ -6,6 +6,7 @@ import net.hwyz.iov.cloud.framework.web.filter.TraceIdFilter;
 import net.hwyz.iov.cloud.framework.web.filter.XssFilter;
 import net.hwyz.iov.cloud.framework.web.handler.GlobalExceptionHandler;
 import net.hwyz.iov.cloud.framework.web.handler.ValidationExceptionHandler;
+import net.hwyz.iov.cloud.framework.web.handler.WebRequestExceptionHandler;
 import net.hwyz.iov.cloud.framework.web.interceptor.RequestLogInterceptor;
 import net.hwyz.iov.cloud.framework.web.properties.WebFrameworkProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -36,6 +37,12 @@ public class WebAutoConfiguration implements WebMvcConfigurer {
     @ConditionalOnMissingBean
     public ValidationExceptionHandler validationExceptionHandler() {
         return new ValidationExceptionHandler();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public WebRequestExceptionHandler webRequestExceptionHandler() {
+        return new WebRequestExceptionHandler();
     }
 
     @Bean

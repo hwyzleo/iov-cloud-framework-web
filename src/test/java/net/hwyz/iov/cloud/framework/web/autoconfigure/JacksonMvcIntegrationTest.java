@@ -21,6 +21,7 @@ import java.time.OffsetDateTime;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -102,13 +103,15 @@ class JacksonMvcIntegrationTest {
 
     @Test
     void POST非法时间输入被拒绝() throws Exception {
-        // 拒绝语义由框架 codec 保证（不静默纠正）；HTTP 状态遵循框架既有 GlobalExceptionHandler 策略（所有异常 → 500）
+        // 拒绝语义由框架 codec 保证（不静默纠正）；报文不可解析属请求层错误，
+        // 按 FW-WEB-DSN-CR-004 返回 HTTP 400 + 100001，不再报成 500 系统故障
         mockMvc.perform(post("/time")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"instant\":\"not-a-date\","
                                 + "\"offset\":\"2026-10-28T20:43:32+08:00\","
                                 + "\"local\":\"2026-10-14T14:26:13\"}"))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("100001"));
     }
 
     @Configuration
